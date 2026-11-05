@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { headers } from 'next/headers'
 import Link from 'next/link'
 import { Landing } from '@/components/landing'
 import {
@@ -19,22 +20,34 @@ function firstParam(value: string | string[] | undefined): string | undefined {
   return Array.isArray(value) ? value[0] : value
 }
 
-export async function generateMetadata(): Promise<Metadata> {
-  // TODO: title y description según la variante asignada.
-  // El canonical es CANONICAL_PATH, sin query.
-  // ?preview= lleva noindex y no es la asignación.
+const VARIANT_HEADER = 'x-lab-variant'
+
+async function resolveVariant(
+  searchParams: PracticaPageProps['searchParams'],
+): Promise<{ variant: Variant; isPreview: boolean }> {
+  const params = await searchParams
+  const requested = firstParam(params.preview)
+  if (isVariant(requested)) return { variant: requested, isPreview: true }
+  const assigned = (await headers()).get(VARIANT_HEADER)
+  return { variant: isVariant(assigned) ? assigned : 'a', isPreview: false }
+}
+
+export async function generateMetadata({ searchParams }: PracticaPageProps): Promise<Metadata> {
+  const { variant, isPreview } = await resolveVariant(searchParams)
+  const copy = VARIANTS[variant]
   return {
-    title: { absolute: 'Taller Norte' },
+    metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'),
+    title: { absolute: copy.seoTitle },
+    description: copy.seoDescription,
     alternates: { canonical: CANONICAL_PATH },
-    robots: { index: false, follow: false },
+    // El layout pone noindex global: la página real lo pisa; el preview lo mantiene.
+    robots: isPreview ? { index: false, follow: false } : { index: true, follow: true },
   }
 }
 
 export default async function PracticaPage({ searchParams }: PracticaPageProps) {
-  const params = await searchParams
-  const requested = firstParam(params.preview)
-  const preview = isVariant(requested) ? requested : null
-  const variant: Variant = preview ?? 'a'
+  const { variant, isPreview } = await resolveVariant(searchParams)
+  const preview = isPreview ? variant : null
   const copy = VARIANTS[variant]
   const titleLength = characterCount(copy.seoTitle)
   const descriptionLength = characterCount(copy.seoDescription)
@@ -42,12 +55,12 @@ export default async function PracticaPage({ searchParams }: PracticaPageProps) 
   return (
     <main id="contenido" className="mx-auto flex max-w-6xl flex-col gap-10 px-6 py-10 md:py-14">
       <p className="font-mono text-[0.7rem] tracking-[0.16em] text-muted-foreground uppercase">
-        Esqueleto · sin resolver
+        Laboratorio 01 · práctica
       </p>
       <p className="border-b border-border pb-4 text-sm text-muted-foreground">
         {preview
-          ? `Estás viendo el copy ${preview.toUpperCase()} por query. No persiste, y esta vista todavía no lleva noindex.`
-          : 'Asignación pendiente. Sin cookie, la landing queda fija en el copy A.'}
+          ? `Estás viendo el copy ${preview.toUpperCase()} por query. No persiste y esta vista lleva noindex.`
+          : `Copy ${variant.toUpperCase()} asignado a este visitante.`}
       </p>
       <Landing variant={variant} />
       <div className="flex flex-wrap gap-2">
@@ -62,7 +75,7 @@ export default async function PracticaPage({ searchParams }: PracticaPageProps) 
         </Link>
       </div>
       <section className="flex flex-col gap-4">
-        <h2 className="font-serif text-2xl">Metadatos, todavía sin publicar</h2>
+        <h2 className="font-serif text-2xl">Metadatos publicados</h2>
         <dl className="grid gap-4 sm:grid-cols-2">
           <div className="flex flex-col gap-1 border-b border-border pb-3">
             <dt className="font-mono text-[0.7rem] tracking-[0.14em] text-muted-foreground uppercase">

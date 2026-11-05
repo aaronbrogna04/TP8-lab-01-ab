@@ -12,10 +12,23 @@ import {
 // lo reenvía solo al servidor; nunca se devuelve al navegador.
 export const VARIANT_HEADER = 'x-lab-variant'
 
+// Crawlers conocidos. Regex simple, no exhaustiva.
+const CRAWLER_UA =
+  /googlebot|bingbot|duckduckbot|baiduspider|yandex(bot)?|slurp|facebookexternalhit|twitterbot|linkedinbot|applebot|embedly|pinterest|whatsapp|telegrambot|slackbot|\bbot\b|crawler|spider/i
+
 export function proxy(request: NextRequest) {
   const requestHeaders = new Headers(request.headers)
   // Nunca confiar en un header que venga del cliente.
   requestHeaders.delete(VARIANT_HEADER)
+
+  // Crawlers: no es cloaking. Se fija el control (A) en la MISMA URL y con el
+  // mismo canonical para que el texto indexado sea estable y no dependa de un
+  // sorteo; no se les muestra contenido distinto para manipular el ranking.
+  // Sin cookies ni impresión (no son visitantes reales).
+  if (CRAWLER_UA.test(request.headers.get('user-agent') ?? '')) {
+    requestHeaders.set(VARIANT_HEADER, 'a')
+    return NextResponse.next({ request: { headers: requestHeaders } })
+  }
 
   // Preview: no escribe cookies ni anota impresión. Un valor inválido se ignora.
   const preview = request.nextUrl.searchParams.get('preview')
