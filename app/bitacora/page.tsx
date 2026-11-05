@@ -51,7 +51,7 @@ export default function BitacoraPage() {
               </td>
               <td className="py-3 font-mono">{formatCount(TEST_CASE[variant].impressions)}</td>
               <td className="py-3 font-mono">{formatCount(TEST_CASE[variant].conversions)}</td>
-              <td className="py-3 font-mono">{formatRate(conversionRate(TEST_CASE[variant]))}</td>
+              <td className="py-3 font-mono">{formatRate(conversionRate(TEST_CASE[variant].conversions, TEST_CASE[variant].impressions))}</td>
             </tr>
           ))}
         </tbody>
