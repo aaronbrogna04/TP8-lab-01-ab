@@ -1,3 +1,6 @@
+// assignVariant usa SHA-256 (node:crypto): primer byte del digest, par = 'a', impar = 'b'.
+import { createHash } from 'node:crypto'
+
 export type Variant = 'a' | 'b'
 
 export type VariantStats = {
@@ -71,26 +74,48 @@ export function emptyLog(): ExperimentLog {
   }
 }
 
-export function assignVariant(_visitorId: string): Variant {
-  // TODO: hash estable. El mismo id tiene que devolver siempre la misma variante.
-  return 'a'
+export function assignVariant(visitorId: string): Variant {
+  const firstByte = createHash('sha256').update(visitorId).digest()[0]
+  return firstByte % 2 === 0 ? 'a' : 'b'
 }
 
-export function conversionRate(_stats: VariantStats): number | null {
-  // TODO: conversiones / impresiones. Sin impresiones, devolver null, no 0.
-  return null
+export function conversionRate(conversions: number, impressions: number): number | null {
+  if (!Number.isFinite(conversions) || !Number.isFinite(impressions)) return null
+  if (impressions <= 0 || conversions < 0) return null
+  return conversions / impressions
 }
 
 export function rateGap(log: ExperimentLog): number | null {
-  const control = conversionRate(log.a)
-  const treatment = conversionRate(log.b)
+  const control = conversionRate(log.a.conversions, log.a.impressions)
+  const treatment = conversionRate(log.b.conversions, log.b.impressions)
   if (control === null || treatment === null) return null
   return (treatment - control) * 100
 }
 
-export function parseLog(_raw: string | undefined): ExperimentLog {
-  // TODO: validar el JSON antes de usarlo. Si falla, log vacío.
-  return emptyLog()
+function isCount(value: unknown): value is number {
+  return typeof value === 'number' && Number.isInteger(value) && value >= 0
+}
+
+function isStats(value: unknown): value is VariantStats {
+  if (typeof value !== 'object' || value === null) return false
+  const v = value as Record<string, unknown>
+  return isCount(v.impressions) && isCount(v.conversions)
+}
+
+export function parseLog(raw: string | undefined): ExperimentLog {
+  if (raw === undefined) return emptyLog()
+  try {
+    const data: unknown = JSON.parse(raw)
+    if (typeof data !== 'object' || data === null) return emptyLog()
+    const { a, b } = data as Record<string, unknown>
+    if (!isStats(a) || !isStats(b)) return emptyLog()
+    return {
+      a: { impressions: a.impressions, conversions: a.conversions },
+      b: { impressions: b.impressions, conversions: b.conversions },
+    }
+  } catch {
+    return emptyLog()
+  }
 }
 
 export function serializeLog(log: ExperimentLog): string {
