@@ -1,6 +1,14 @@
 'use server'
 
-export async function recordConversion(): Promise<{ status: 'pending' }> {
-  // TODO: una conversión por visitante, solo si hay variante asignada y usó el CTA.
-  return { status: 'pending' }
+import { cookies } from 'next/headers'
+import { COOKIE, assignVariant } from '@/lib/experiment'
+import { logEvent } from '@/lib/db'
+
+export async function recordConversion(): Promise<void> {
+  const visitorId = (await cookies()).get(COOKIE.visitor)?.value
+  if (!visitorId) return
+  // La variante se recalcula desde el id; la cookie lab_variant no se usa.
+  const variant = assignVariant(visitorId)
+  // El índice único parcial deja una sola conversión por visitante.
+  await logEvent(visitorId, variant, 'conversion')
 }
