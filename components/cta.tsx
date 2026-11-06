@@ -24,7 +24,7 @@ export function Cta({ label }: { label: string }) {
       </button>
       <p className="max-w-md text-sm text-muted-foreground">
         {tried
-          ? 'Pendiente: el clic llegó, pero no queda anotada ninguna conversión.'
+          ? 'Listo: el clic quedó registrado.'
           : 'La conversión se anota solo acá. Cargar la página no cuenta.'}
       </p>
     </div>

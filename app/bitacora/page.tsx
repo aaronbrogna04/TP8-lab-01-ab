@@ -5,6 +5,7 @@ import { getCounts } from '@/lib/db'
 import {
   HASH_EXAMPLE_ID,
   TEST_CASE,
+  assignVariant,
   VARIANTS,
   conversionRate,
   formatCount,
@@ -16,6 +17,8 @@ import {
 
 export const metadata: Metadata = {
   title: 'Bitácora',
+  description:
+    'Impresiones, conversiones y tasa por variante: el caso de prueba fijo y los eventos reales registrados en la base.',
   robots: { index: false, follow: false },
 }
 
@@ -29,17 +32,17 @@ export default async function BitacoraPage() {
   return (
     <main id="contenido" className="mx-auto flex max-w-6xl flex-col gap-10 px-6 py-10 md:py-14">
       <p className="font-mono text-[0.7rem] tracking-[0.16em] text-muted-foreground uppercase">
-        Sin eventos
+        Bitácora del experimento
       </p>
       <h1 className="max-w-2xl font-serif text-4xl tracking-tight text-balance md:text-5xl">
-        La bitácora todavía no calcula.
+        Impresiones, conversiones y tasa por variante.
       </h1>
       <p className="max-w-2xl text-lg leading-relaxed text-muted-foreground">
-        Los conteos del caso de prueba ya están. La tasa no: conversiones divididas por impresiones. No se declara ganador.
+        La tasa es conversiones divididas por impresiones. La diferencia entre variantes se informa en puntos porcentuales, sin interpretar el resultado.
       </p>
       <table className="w-full text-left text-sm">
         <caption className="mb-3 text-left text-muted-foreground">
-          Cohorte fija. Cuando la fórmula esté, A tiene que dar 7,50%, B 13,14% y la diferencia 5,64 pp.
+          Caso de prueba fijo. Tasas y diferencia calculadas con la misma fórmula que los datos reales.
         </caption>
         <thead>
           <tr className="border-b border-border">
@@ -64,7 +67,7 @@ export default async function BitacoraPage() {
       </table>
       <p className="font-mono text-sm">B − A = {formatPoints(rateGap(TEST_CASE))}</p>
       <p className="font-mono text-sm">
-        assignVariant({`'${HASH_EXAMPLE_ID}'`}) → pendiente
+        assignVariant({`'${HASH_EXAMPLE_ID}'`}) → {`'${assignVariant(HASH_EXAMPLE_ID)}'`}
       </p>
       <section aria-labelledby="datos-reales" className="flex flex-col gap-3">
         <h2 id="datos-reales" className="font-serif text-2xl tracking-tight">

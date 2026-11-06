@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { TEST_CASE, conversionRate, formatRate } from '@/lib/experiment'
 
 export const metadata: Metadata = {
   title: 'Esqueleto',
@@ -11,7 +12,10 @@ const FILES = [
   ['lib/experiment.ts', 'Hash, tasa y validación del log. El copy y el caso de prueba ya están.'],
   ['app/practica/page.tsx', 'Publicar title, description y un canonical único.'],
   ['app/practica/actions.ts', 'Una conversión por visitante, solo con el CTA.'],
-  ['app/bitacora/page.tsx', 'Mostrar la tasa. El caso fijo tiene que dar 7,50% y 13,14%.'],
+  [
+    'app/bitacora/page.tsx',
+    `Mostrar la tasa. El caso fijo da ${formatRate(conversionRate(TEST_CASE.a.conversions, TEST_CASE.a.impressions))} en A y ${formatRate(conversionRate(TEST_CASE.b.conversions, TEST_CASE.b.impressions))} en B.`,
+  ],
 ]
 
 export default function HomePage() {
